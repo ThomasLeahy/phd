@@ -1,0 +1,85 @@
+---
+title: "Tropical Cyclone Genesis (WNP, 1991-2010)"
+author: Thomas Leahy
+output: 
+  flexdashboard::flex_dashboard:
+    theme: journal
+    social: menu
+    source_code: embed
+    orientation: rows
+---
+
+```{r setup, include = FALSE}
+library(flexdashboard)
+library(shiny)
+library(jsonlite)
+library(maptools)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(leaflet)
+library(plotly)
+
+gen_data <- read.csv('~/phd/genesis_dashboard/gen_data1.csv', header = T)
+gen_data <- gen_data[gen_data$indic==1,]
+
+month_nums <- table(gen_data$month)
+
+year_nums <- c(table(gen_data$year))
+year_data <- data.frame(Year=1991:2010, freq=year_nums)
+```
+
+Row
+-----------------------------------------------
+
+### Annual Frequency
+
+```{r}
+plot_ly(year_data, x = ~Year) %>%
+  add_trace(y = ~freq, name = 'Frequency',mode = 'lines+markers', type='scatter')%>%
+  layout(xaxis = list(title = "Year", showline = T),
+         yaxis = list (title = "Frequency", range = c(0,24), showline = T))
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### Spatial distribution
+
+```{r}
+leaflet() %>% 
+  addTiles() %>% 
+  fitBounds(100,0,60,180) %>% 
+  addCircleMarkers(gen_data$lons, 
+                   gen_data$lats, 
+                   radius = 3, 
+                   fill = T,
+                   fillOpacity = 0.2,
+                   opacity = 0.6,
+                   popup = paste("Year:",gen_data$year,
+                                 "Month:",gen_data$month, 
+                                 sep = " "))
+
+```
+
+
+
+### Monthly Frequency
+
+```{r}
+
+  plot_ly(type = "bar", 
+          x = 1:12, 
+          y = month_nums)  %>%
+  layout(xaxis = list(showline = F, 
+                      showticklabels = T, 
+                      fixedrange = T, 
+                      title = "Months"),
+         yaxis = list(fixedrange = T, 
+                      title = "Count"))
+```
+
+
